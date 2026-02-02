@@ -52,13 +52,56 @@ def missing_values(df):
     if missing.sum() == 0:
         print("Brak brakujacych wartosci.")
 
+def target_analysis(df):
+    "Analiza zmiennej celu (label)"
+    print("=" * 50)
+    print("Analiza zmiennej celu (label):")
+    print("=" * 50)
+
+    label_count = df['label'].value_counts()
+    label_percent = (label_count/len(df)*100).round(2)
+
+    print("\nRozklad klas w zbiorze danych:")
+    for label, count in label_count.items():
+        percent = label_percent[label]
+        print(f"{label}: {count} ({percent}%)")
+
+    # Budowanie wykresu
+    plt.figure(figsize=(10, 6))
+    colors = ['blue' if l == 'Real' else 'red' for l in label_count.index]
+    bars = plt.bar(label_count.index, label_count.values, color=colors)
+
+    plt.title('Rozklad klas w zbiorze danych')
+    plt.xlabel('Klasa')
+    plt.ylabel('Liczba rekordow')
+
+    # Przeniesienie warrtosci na slupki
+    for bar, count in zip(bars, label_count.values):
+        plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 100,
+                 str(count), ha='center', va='bottom')
+
+    plt.tight_layout()
+    plt.savefig(os.path.join(OUTPUT_PATH, 'label_distribution.png'))
+    print("Zapisano wykres do pliku label_distribution.png")
+    plt.close()
+
 
 def main():
+    """ Glowna funkcja, podzial na podfunkcje: Wstep, Wczytanie danych, Analiza """
+    print("=" * 50)
+    print("Witaj w skrypcie eksploracji danych!")
+    print("=" * 50)
+
+    # Tworzenie folderu output jezeli nie istnieje
+    os.makedirs(OUTPUT_PATH, exist_ok=True)
+
     # Wczytuje dane
     df = load_data(DATA_PATH)
 
+    # Analiza
     basic_info(df)
     missing_values(df)
+    target_analysis(df)
 
 
 # print(os.getcwd()) -> potrzebny do sprawdzenia relative path
