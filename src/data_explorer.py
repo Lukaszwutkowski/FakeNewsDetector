@@ -75,7 +75,7 @@ def target_analysis(df):
     plt.xlabel('Klasa')
     plt.ylabel('Liczba rekordow')
 
-    # Przeniesienie warrtosci na slupki
+    # Przeniesienie wartosci na slupki
     for bar, count in zip(bars, label_count.values):
         plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 100,
                  str(count), ha='center', va='bottom')
@@ -85,6 +85,68 @@ def target_analysis(df):
     print("Zapisano wykres do pliku label_distribution.png")
     plt.close()
 
+def text_length_analysis(df):
+    "Analiza dlugosci tekstu"
+    print("=" * 50)
+    print("Analiza dlugosci tekstu:")
+    print("=" * 50)
+
+    # Funkcja oblicza dlugosc tekstu poprzez zliczanie liczby znakow dla tekstu oraz tytulu
+    df['text_length'] = df['text'].fillna('').str.len()
+    df['title_length'] = df['title'].fillna('').str.len()
+
+    print("\n Dlugosc artykulu w zbiorze danych:")
+    print(df[['text_length', 'title_length']].describe().round(2))
+
+    print("\n Dlugosc tytulu:")
+    print(df['title_length'].describe().round(2))
+
+    # Funkcja do porownania dlugosci dla Real oraz Fake news
+    print("\n Porownanie dlugosci artykulu dla Real oraz Fake news:")
+    print(df.groupby('label')['text_length'].mean().round(2))
+
+    # Rysowanie wykresu z wynikami
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+    # Histogram dlugosci tekstu
+    df[df['label'] == 'Real']['text_length'].hist(
+        ax=axes[0], bins=50, alpha=0.7, label='Real', color='blue')
+    df[df['label'] == 'Fake']['text_length'].hist(
+        ax=axes[0], bins=50, alpha=0.7, label='Fake', color='red'
+    )
+    axes[0].legend()
+    axes[0].set_title('Histogram dlugosci tekstu')
+    axes[0].set_xlabel('Liczba znakow')
+    axes[0].set_ylabel('Liczba artykow')
+    axes[0].set_xlim(0, 2000)
+
+    # Analogicznie histogram dla tytulu
+    df[df['label'] == 'Real']['title_length'].hist(
+        ax=axes[1], bins=50, alpha=0.7, label='Real', color='blue')
+    df[df['label'] == 'Fake']['title_length'].hist(
+        ax=axes[1], bins=50, alpha=0.7, label='Fake', color='red'
+    )
+    axes[1].legend()
+    axes[1].set_title('Histogram dlugosci tytulu')
+    axes[1].set_xlabel('Liczba znakow')
+    axes[1].set_ylabel('Liczba artykow')
+
+    plt.tight_layout()
+    plt.savefig(os.path.join(OUTPUT_PATH, 'text_length_distribution.png'))
+    print("Zapisano wykres do pliku text_length_distribution.png")
+    plt.close()
+
+    return df
+
+def languages_analysis(df):
+    "Analiza jazykow"
+    print("=" * 50)
+    print("Analiza jazykow:")
+    print("=" * 50)
+
+    lang_count = df['language'].value_counts()
+    print("\nRozklad jazykow w zbiorze danych:")
+    print(lang_count)
 
 def main():
     """ Glowna funkcja, podzial na podfunkcje: Wstep, Wczytanie danych, Analiza """
@@ -92,7 +154,7 @@ def main():
     print("Witaj w skrypcie eksploracji danych!")
     print("=" * 50)
 
-    # Tworzenie folderu output jezeli nie istnieje
+    # Tworze folder output jezeli nie istnieje
     os.makedirs(OUTPUT_PATH, exist_ok=True)
 
     # Wczytuje dane
@@ -102,6 +164,8 @@ def main():
     basic_info(df)
     missing_values(df)
     target_analysis(df)
+    df = text_length_analysis(df)
+    languages_analysis(df)
 
 
 # print(os.getcwd()) -> potrzebny do sprawdzenia relative path
