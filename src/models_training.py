@@ -1,7 +1,7 @@
 
 import os
 import joblib
-import re
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -10,6 +10,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from sklearn.model_selection import train_test_split
+
+from utils.text_processing import text_preprocessing
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -27,23 +29,6 @@ def load_data(filepath):
     df = pd.read_csv(filepath)
     print(f"Dane wczytane: W pliku znaleziono {len(df)} rekordow.")
     return df
-
-def text_preprocessing(text):
-    """
-    Przygotowanie tekstu do modelowania:
-    W celu uzyskania najlepszych wynikow przygotuje tekst do modelowania.
-    -- Usuniecie znakow specjalnych -- zamiana na male litery -- usuniecie nadmiarowych spacji
-    Usuwanie 'szumu'.
-    """
-
-    if pd.isna(text):
-        return ""
-
-    text = re.sub(r'[^a-zA-Z0-9\s]', "", text)
-    text = text.lower()
-    text = ' '.join(text.split())
-
-    return text
 
 def preprocessing_data(df):
     "Przygotowanie danych do trenowania"
