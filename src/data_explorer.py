@@ -1,6 +1,20 @@
 """
 Skrypt ma za zadanie eksploracje danych
 w celu zrozumienia struktury oraz charakterystyki zbioru danych
+Chce poznac:
+ilosc rekordow,
+nazwy kolumn,
+typ danych,
+pierwsze 5 rekordow,
+brakujace wartosci,
+rozklad klas,
+wykresy
+Podsumowanie:
+- podstawowe informacje o zbiorze danych
+- wykresy z brakujacych wartosci
+- analiza zmiennej celu (label)
+- analiza dlugosci tekstu
+- analiza jezykow
 """
 
 import pandas as pd
@@ -14,7 +28,7 @@ DATA_PATH = os.path.join(BASE_DIR, "..", "data", "raw", "news_articles.csv")
 OUTPUT_PATH = os.path.join(BASE_DIR, "..", "data", "processed")
 
 def load_data(filepath):
-    "Wczytuje dane z pliku csv"
+    "Wczytuje dane z pliku csv. Korzystam z pandas DataFrame dla wygodnego dostepu do danych."
     if not os.path.isfile(filepath):
         print(f"Plik {filepath} nie istnieje.")
         return None
@@ -25,7 +39,8 @@ def load_data(filepath):
     return df
 
 def basic_info(df):
-    "Podstawowe informacje o zbiorze danych"
+    """Podstawowe informacje o zbiorze danych. Ma na celu uzyskac informacje:
+    len(df), df.columns, df.dtypes, df.head()"""
     print("=" * 50)
     print("Podstawowe informacje o zbiorze danych:")
     print("=" * 50)
@@ -36,7 +51,7 @@ def basic_info(df):
     print("=" * 50)
 
 def missing_values(df):
-    "Wykresy z brakujacych wartosci"
+    """Brakujace wartosci. Ma na celu sprawdzic braki danych"""
     print("=" * 50)
     print("Wykresy z brakujacych wartosci:")
     print("=" * 50)
@@ -53,7 +68,10 @@ def missing_values(df):
         print("Brak brakujacych wartosci.")
 
 def target_analysis(df):
-    "Analiza zmiennej celu (label)"
+    """
+    Analiza zmiennej celu (label). Ma na celu uzyskanie rozkladu klas w zbiorze danych.
+    Poznanie jakie sa klasy, jak sa zbalansowane - proporcje
+    """
     print("=" * 50)
     print("Analiza zmiennej celu (label):")
     print("=" * 50)
@@ -86,7 +104,13 @@ def target_analysis(df):
     plt.close()
 
 def text_length_analysis(df):
-    "Analiza dlugosci tekstu"
+    """
+    Analiza dlugosci tekstu. Ma na celu uzyskanie rozkladu dlugosci tekstu w zbiorze danych.
+    Poznanie jakie sa dlugosci artykow, dlugosci tytulow.
+    Porownanie dlugosci artykow dla Real oraz Fake news.
+    Dlugie teksty - moze spowolnic model
+    Krotsze teksty - malo informacji do klasyfikacji
+    """
     print("=" * 50)
     print("Analiza dlugosci tekstu:")
     print("=" * 50)
@@ -139,7 +163,11 @@ def text_length_analysis(df):
     return df
 
 def languages_analysis(df):
-    "Analiza jazykow"
+    """
+    Analiza jazykow. Ma na celu uzyskanie rozkladu jazykow w zbiorze danych.
+    Celem ogolnym jest budowanie modelu na bazie jezyka angielskiego
+    -popularnosc, wieksza proporcja fake news.
+    """
     print("=" * 50)
     print("Analiza jazykow:")
     print("=" * 50)
