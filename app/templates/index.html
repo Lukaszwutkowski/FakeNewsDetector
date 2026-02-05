@@ -1,10 +1,45 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
+{% block title%}
+<h1>Welcome to Fake News Detector</h1>
+{% endblock %}
 
-</body>
-</html>
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header">
+                <h4 class="mb-0">Analiza Fake News</h4>
+            </div>
+            <div class="card-body">
+                {% if error %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endif %}
+                <p class="text-muted">
+                    Wprowadz tutul oraz tresc artykulu, aby zobaczyc wynik analizy
+                    i ocene wiarygodnosci artykulu
+                </p>
+
+                <form action="{{ url_for('predict_route') }}" method="POST">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Tytul</label>
+                        <input type="text" class="form-control" id="title"
+                               name="title" placeholder="Wprowadz tytul artykulu" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="text" class="form-label">Tresc</label>
+                        <textarea class="form-control" id="text" name="text"
+                                  rows="8" placeholder="Wprowadz tresc artykulu" required></textarea>
+                    </div>
+
+                    <div class="d-grid">
+                        <button class="btn btn-primary btn-lg" type="submit">Analizuj</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

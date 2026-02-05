@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title%}Wynik analizowanego tekstu{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Wynik analizy -->
+        <div class="card shadow mb-4">
+            <div class="card-header {% if prediction == 1 %}bg-success{% else %}bg-danger{% endif %} text-white">
+                <h4 class="mb-0">Wynik analizy</h4>
+            </div>
+            <div class="card-body text-center">
+                <!-- Etykieta -->
+                <h2 class="display-4 {% if prediction == 1 %}text-success{% else %}text-danger{% endif %}">
+                    {{label}}
+                </h2>
+
+                <p class="lead">Poziom pewnosci: <strong>{{confidence}}</strong></p>
+
+                <!-- Pasek postepu -->
+                <div class="progress mb-4" style="height: 25px;">
+                    <div class="progress-bar bg-{% if prediction == 1 %}success{% else %}danger{% endif %}"
+                         role="progressbar"
+                         style="width: {{ confidence }}%">
+                        {{ confidence }}%
+                    </div>
+                </div>
+
+                {% if prediction == 1 %}
+                <p class="text-muted">
+                    Artykul <strong>wiarygodny</strong></p>
+                {% else %}
+                <p class="text-muted">
+                    Artykul <strong>potencjalnie niewiarygodny</strong>
+                </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Analizowany tekst -->
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h4 class="mb-0">Analizowany artykul</h4>
+            </div>
+            <div class="card-body">
+                {% if title %}
+                <h6>Tytul:</h6>
+                <p class="border-start border-3 ps-3">{{ title }}</p>
+                {% endif %}
+
+                {% if text %}
+                <h6>Tresc:</h6>
+                <p class="border-start border-3 ps-3">{{ text }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Przycisk powrotu -->
+        <div class="text-center">
+            <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">
+                Analizuj kolejny artykul
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

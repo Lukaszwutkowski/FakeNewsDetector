@@ -60,9 +60,9 @@ def predict(text):
     confidence = max(probabilities) * 100
 
     if prediction == 0:
-        label = "Real News"
-    else:
         label = "Fake News"
+    else:
+        label = "Real News"
 
     return {
         "prediction": int(prediction),

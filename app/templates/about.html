@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title%}O projekcie{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card shadow">
+      <div class="card-header">
+        <h4 class="mb-0">O projekcie</h4>
+      </div>
+      <div class="card-body">
+        <h5>Opis dzialania projektu</h5>
+        <ol>
+          <li>Uzytkownik wprowadza tekst i tytul artykulu</li>
+          <li>Model przetwarza tekst i tytul (normalizacja, czyszczenie)</li>
+          <li>Model przeksztalca tekst na wektor cech (TF-IDF)</li>
+          <li>Model wykonuje predykcje na podstawie wektora cech</li>
+          <li>Prezentacja wyniku wraz z poziomem pewnosci</li>
+        </ol>
+        <h5>Technologia</h5>
+        <ul>
+          <li><strong>Python 3.10</strong></li>
+          <li><strong>Flask 2.2.2</strong></li>
+          <li><strong>scikit-learn</strong></li>
+          <li><strong>Bootstrap</strong></li>
+        </ul>
+        <p class="text-muted">Projekt inzynierski @Author - Lukasz Wutkowski.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
