@@ -1,0 +1,29 @@
+/*
+Style dla aplikacji
+ */
+
+/* Ustawienia globalne */
+body{
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main{
+    flex: 1;
+}
+
+/* Karty */
+.card{
+    border-radius: 10px;
+}
+
+.card-header{
+    border-radius: 10px 10px 0 0 !important;
+}
+
+/* Formularz */
+textarea.form-control{
+    resize: vertical;
+    min-height: 150px;
+}

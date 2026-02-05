@@ -92,7 +92,8 @@ def train_model(x_train_tfidf, y_train):
     model = LogisticRegression(
         max_iter=1000,
         random_state=42,
-        C=1.0
+        C=1.0,
+        class_weight='balanced'
     )
 
     model.fit(x_train_tfidf, y_train)
