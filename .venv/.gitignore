@@ -58,6 +58,7 @@ __pypackages__/
 # Database / data artifacts
 *.sqlite3
 *.db
+*.csv
 
 # Machine Learning models / artifacts
 *.pkl
