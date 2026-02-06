@@ -26,5 +26,5 @@ files:
   newDataset_true: "data/raw/newDataset/True.csv"
 
   # Model artifacts
-  model: "ml/model.joblib"
-  vectorizer: "ml/vectorizer.joblib"
+  model: "ml"
+  vectorizer: "ml"

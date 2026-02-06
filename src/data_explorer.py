@@ -48,7 +48,7 @@ class DataExplorer:
     def __init__(self, name: str = "Dataset"):
         self.df = None
         self.name = name
-        self.output_path = Paths.DATA_PROCESSED
+        self.output_path = Paths.DATA_PROCESSED / self.name # --> rozwiazanie problemu z nadpisywaniem wykresow
         self.output_path.mkdir(parents=True, exist_ok=True)
 
     def load_data(self, filepath):
@@ -163,7 +163,7 @@ class DataExplorer:
             if len(subset) > 0:
                 subset['text_length'].hist(ax=axes[0], bins=50, alpha=0.7, label=label, color=color)
         axes[0].legend()
-        axes[0].set_title('Histogram dlugosci tekstu - {self.name}')
+        axes[0].set_title(f'Histogram dlugosci tekstu - {self.name}')
         axes[0].set_xlabel('Liczba znakow')
         axes[0].set_ylabel('Liczba artykow')
         axes[0].set_xlim(0, 2000)
@@ -199,7 +199,7 @@ class OldDatasetExplorer(DataExplorer):
     Analiza pliku csv z poprzedniej wersji.
     """
     def __init__(self):
-        super().__init__("OldDataset")
+        super().__init__("old")
         self.filepath = Files.NEWS_ARTICLES
 
     def load_data(self, filepath: str = None) -> pd.DataFrame:
@@ -236,7 +236,7 @@ class NewDatasetExplorer(DataExplorer):
     """
 
     def __init__(self):
-        super().__init__("NewDataset")
+        super().__init__("new")
         self.fake_path = Files.DATA_FAKE
         self.true_path = Files.DATA_TRUE
 
@@ -278,7 +278,7 @@ class NewDatasetExplorer(DataExplorer):
             return
 
         print("=" * 50)
-        print("Analiza tematow: {self.name}")
+        print(f"Analiza tematow: {self.name}")
         print("=" * 50)
 
         subject_count = self.df['subject'].value_counts()

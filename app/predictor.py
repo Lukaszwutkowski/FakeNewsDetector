@@ -1,7 +1,6 @@
 """
 Modul odpowiedzialny za predykcje. Laduje wytrenowany model i klasyfikuje tekst
 """
-import os
 
 import joblib
 
