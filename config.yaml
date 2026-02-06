@@ -24,7 +24,3 @@ files:
   # New dataSet
   newDataset_fake: "data/raw/newDataset/Fake.csv"
   newDataset_true: "data/raw/newDataset/True.csv"
-
-  # Model artifacts
-  model: "ml"
-  vectorizer: "ml"

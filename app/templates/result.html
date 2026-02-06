@@ -6,27 +6,26 @@
     <div class="col-lg-8">
         <!-- Wynik analizy -->
         <div class="card shadow mb-4">
-            <div class="card-header {% if prediction == 1 %}bg-success{% else %}bg-danger{% endif %} text-white">
+            <div class="card-header {% if prediction == 0 %}bg-success{% else %}bg-danger{% endif %} text-white">
                 <h4 class="mb-0">Wynik analizy</h4>
             </div>
             <div class="card-body text-center">
                 <!-- Etykieta -->
-                <h2 class="display-4 {% if prediction == 1 %}text-success{% else %}text-danger{% endif %}">
+                <h2 class="display-4 {% if prediction == 0 %}text-success{% else %}text-danger{% endif %}">
                     {{label}}
                 </h2>
 
-                <p class="lead">Poziom pewnosci: <strong>{{confidence}}</strong></p>
-
+                <p class="lead">Poziom pewnosci: <strong>{{confidence}}%</strong></p>
                 <!-- Pasek postepu -->
                 <div class="progress mb-4" style="height: 25px;">
-                    <div class="progress-bar bg-{% if prediction == 1 %}success{% else %}danger{% endif %}"
+                    <div class="progress-bar {% if prediction == 0 %}bg-success{% else %}bg-danger{% endif %}"
                          role="progressbar"
                          style="width: {{ confidence }}%">
                         {{ confidence }}%
                     </div>
                 </div>
 
-                {% if prediction == 1 %}
+                {% if prediction == 0 %}
                 <p class="text-muted">
                     Artykul <strong>wiarygodny</strong></p>
                 {% else %}

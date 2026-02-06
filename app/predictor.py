@@ -5,7 +5,11 @@ Modul odpowiedzialny za predykcje. Laduje wytrenowany model i klasyfikuje tekst
 import joblib
 
 from utils.text_processing import text_preprocessing
-from utils.config import Files
+from utils.config import Paths
+
+RUN_NAME = "new_dataset"
+MODEL_PATH = Paths.MODELS / RUN_NAME / "model.joblib"
+VECTORIZER_PATH = Paths.MODELS / RUN_NAME / "vectorizer.joblib"
 
 model = None
 vectorizer = None
@@ -16,9 +20,9 @@ def load_model():
     """
     global model, vectorizer
 
-    if Files.MODEL.exists() and Files.VECTORIZER.exists():
-        model = joblib.load(Files.MODEL)
-        vectorizer = joblib.load(Files.VECTORIZER)
+    if MODEL_PATH.exists() and VECTORIZER_PATH.exists():
+        model = joblib.load(MODEL_PATH)
+        vectorizer = joblib.load(VECTORIZER_PATH)
         print("Model zaladowany pomyslnie")
     else:
         print("Nie znaleziono modelu")
@@ -29,7 +33,7 @@ def predict(text):
     """
     Predykcja dla podanego tekstu, przyjmuje parametr text (str) czyli tekst artykulu
     Zwraca: Slownik z wynikami predykcji:
-    - prediction: 0 - Fake News, 1 - Real News
+    - prediction: 1 - Fake News, 0 - Real News
     - confidence: poziom prawidlowosci predykcji (0-100)
     - label: etykieta predykcji
     """
@@ -49,19 +53,19 @@ def predict(text):
 
     text_vectorized = vectorizer.transform([processed_text])
 
-    prediction = model.predict(text_vectorized)[0]
+    prediction = int(model.predict(text_vectorized)[0])
 
     probabilities = model.predict_proba(text_vectorized)[0]
-    confidence = max(probabilities) * 100
+    real_probability = probabilities[0] * 100
+    fake_probability = probabilities[1] * 100
 
-    if prediction == 0:
-        label = "Fake News"
-    else:
-        label = "Real News"
+    label = "Fake News" if prediction == 1 else "Real News"
+    confidence = fake_probability if prediction == 1 else real_probability
 
     return {
         "prediction": int(prediction),
         "confidence": round(confidence, 1),
+        "fake_probability": round(fake_probability, 1),
         "label": label
     }
 
