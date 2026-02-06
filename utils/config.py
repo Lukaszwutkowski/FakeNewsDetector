@@ -70,3 +70,9 @@ def dir_exists() -> None:
     Paths.MODELS.mkdir(parents=True, exist_ok=True)
     Paths.DATA_RAW.mkdir(parents=True, exist_ok=True)
     Paths.DATA_NEWDATASET.mkdir(parents=True, exist_ok=True)
+
+class ModelConfig:
+    """
+    Konfiguracja modelu. Wybor aktualnego datasetu
+    """
+    ACTIVE_RUN = _config.get('model', {}).get('active_run', 'new_dataset')

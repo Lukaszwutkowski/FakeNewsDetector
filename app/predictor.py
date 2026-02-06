@@ -5,9 +5,9 @@ Modul odpowiedzialny za predykcje. Laduje wytrenowany model i klasyfikuje tekst
 import joblib
 
 from utils.text_processing import text_preprocessing
-from utils.config import Paths
+from utils.config import Paths, ModelConfig
 
-RUN_NAME = "new_dataset"
+RUN_NAME = ModelConfig.ACTIVE_RUN
 MODEL_PATH = Paths.MODELS / RUN_NAME / "model.joblib"
 VECTORIZER_PATH = Paths.MODELS / RUN_NAME / "vectorizer.joblib"
 
@@ -65,7 +65,6 @@ def predict(text):
     return {
         "prediction": int(prediction),
         "confidence": round(confidence, 1),
-        "fake_probability": round(fake_probability, 1),
         "label": label
     }
 
