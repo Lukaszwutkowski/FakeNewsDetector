@@ -24,3 +24,8 @@ files:
   # New dataSet
   newDataset_fake: "data/raw/newDataset/Fake.csv"
   newDataset_true: "data/raw/newDataset/True.csv"
+
+# Konfiguracja modelu, zmiana datasetu
+model:
+  # Aktywny model do trenowania
+  active_run: "new_dataset"
