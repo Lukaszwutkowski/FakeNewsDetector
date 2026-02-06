@@ -59,8 +59,6 @@ class Files:
     NEWS_ARTICLES = PROJECT_ROOT / _config["files"]["news_articles"]
     DATA_FAKE = PROJECT_ROOT / _config["files"]["newDataset_fake"]
     DATA_TRUE = PROJECT_ROOT / _config["files"]["newDataset_true"]
-    MODEL = PROJECT_ROOT / _config["files"]["model"]
-    VECTORIZER = PROJECT_ROOT / _config["files"]["vectorizer"]
 
 def dir_exists() -> None:
     """
