@@ -6,11 +6,7 @@ import os
 import joblib
 
 from utils.text_processing import text_preprocessing
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-MODEL_PATH = os.path.join(BASE_DIR, "..", "ml", "model.joblib")
-VECTORIZER_PATH = os.path.join(BASE_DIR, "..", "ml", "vectorizer.joblib")
+from utils.config import Files
 
 model = None
 vectorizer = None
@@ -21,9 +17,9 @@ def load_model():
     """
     global model, vectorizer
 
-    if os.path.exists(MODEL_PATH) and os.path.exists(VECTORIZER_PATH):
-        model = joblib.load(MODEL_PATH)
-        vectorizer = joblib.load(VECTORIZER_PATH)
+    if Files.MODEL.exists() and Files.VECTORIZER.exists():
+        model = joblib.load(Files.MODEL)
+        vectorizer = joblib.load(Files.VECTORIZER)
         print("Model zaladowany pomyslnie")
     else:
         print("Nie znaleziono modelu")

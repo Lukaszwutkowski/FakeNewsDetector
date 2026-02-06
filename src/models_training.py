@@ -10,18 +10,15 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from sklearn.model_selection import train_test_split
+from pathlib import Path
 
 from utils.text_processing import text_preprocessing
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-DATA_PATH = os.path.join(BASE_DIR, "..", "data", "raw", "news_articles.csv")
-OUTPUT_PATH = os.path.join(BASE_DIR, "..", "data", "processed")
-MODEL_DIR = os.path.join(BASE_DIR, "..", "ml")
+from utils.config import Files, Paths
 
 def load_data(filepath):
     "Wczytuje dane z pliku csv"
-    if not os.path.isfile(filepath):
+    filepath = Path(filepath)
+    if not filepath.is_file():
         print(f"Plik {filepath} nie istnieje.")
         return None
 
@@ -101,12 +98,15 @@ def train_model(x_train_tfidf, y_train):
 
 def save_model(model, vectorizer, model_dir):
     """Zapis modelu w pliku."""
+    model_dir = Path(model_dir)
     print("Zapis modelu w pliku...")
 
-    model_path = os.path.join(model_dir, "model.joblib")
-    vectorizer_path = os.path.join(model_dir, "vectorizer.joblib")
 
-    os.makedirs(model_dir, exist_ok=True)
+
+    model_path = model_dir / "model.joblib"
+    vectorizer_path = model_dir / "vectorizer.joblib"
+
+    model_dir.mkdir(parents=True, exist_ok=True)
 
     joblib.dump(model, model_path)
     joblib.dump(vectorizer, vectorizer_path)
@@ -160,7 +160,7 @@ def evaluate_model(model, x_test_tfidf, y_test):
     plt.ylabel('Rzeczywista klasa')
     plt.xlabel("Przewidziana klasa")
     plt.tight_layout()
-    plt.savefig(f"{OUTPUT_PATH}/confusion_matrix.png")
+    plt.savefig(Paths.DATA_PROCESSED / "confusion_matrix.png")
     print(f"Dokonano oceny modelu na zbiorze testowym. "
           f"Dokonano {accuracy*100:.2f}% prawidlowych predykcji.")
     plt.close()
@@ -168,12 +168,12 @@ def evaluate_model(model, x_test_tfidf, y_test):
     return accuracy, precision, recall, f1
 
 def main():
-    df = load_data(DATA_PATH)
+    df = load_data(Files.NEWS_ARTICLES)
     df = preprocessing_data(df)
     x_train, x_test, y_train, y_test = split_data(df)
     vectorizer, x_train_tfidf, x_test_tfidf = vectorize_text(x_train, x_test)
     model = train_model(x_train_tfidf, y_train)
-    save_model(model, vectorizer, MODEL_DIR)
+    save_model(model, vectorizer, Paths.MODELS)
     accuracy, precision, recall, f1 = evaluate_model(model, x_test_tfidf, y_test)
 
 if __name__ == "__main__":
