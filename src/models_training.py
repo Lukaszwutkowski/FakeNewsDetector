@@ -1,5 +1,5 @@
 
-import os
+
 import joblib
 
 import numpy as np
@@ -10,18 +10,15 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from sklearn.model_selection import train_test_split
+from pathlib import Path
 
 from utils.text_processing import text_preprocessing
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-DATA_PATH = os.path.join(BASE_DIR, "..", "data", "raw", "news_articles.csv")
-OUTPUT_PATH = os.path.join(BASE_DIR, "..", "data", "processed")
-MODEL_DIR = os.path.join(BASE_DIR, "..", "ml")
+from utils.config import Files, Paths
 
 def load_data(filepath):
     "Wczytuje dane z pliku csv"
-    if not os.path.isfile(filepath):
+    filepath = Path(filepath)
+    if not filepath.is_file():
         print(f"Plik {filepath} nie istnieje.")
         return None
 
@@ -99,14 +96,15 @@ def train_model(x_train_tfidf, y_train):
     model.fit(x_train_tfidf, y_train)
     return model
 
-def save_model(model, vectorizer, model_dir):
+def save_model(model, vectorizer, model_dir: Path):
     """Zapis modelu w pliku."""
+    model_dir = Path(model_dir)
+    model_dir.mkdir(parents=True, exist_ok=True)
+
     print("Zapis modelu w pliku...")
 
-    model_path = os.path.join(model_dir, "model.joblib")
-    vectorizer_path = os.path.join(model_dir, "vectorizer.joblib")
-
-    os.makedirs(model_dir, exist_ok=True)
+    model_path = model_dir / "model.joblib"
+    vectorizer_path = model_dir / "vectorizer.joblib"
 
     joblib.dump(model, model_path)
     joblib.dump(vectorizer, vectorizer_path)
@@ -114,8 +112,14 @@ def save_model(model, vectorizer, model_dir):
     print(f"Model zapisany w pliku: {model_path}")
     print(f"Vectorizer zapisany w pliku: {vectorizer_path}")
 
-def evaluate_model(model, x_test_tfidf, y_test):
-    """Ocena modelu na zbiorze testowym."""
+def evaluate_model(model, x_test_tfidf, y_test, run_name: str):
+    """
+    Ocena modelu na zbiorze testowym.
+    - Dodanie metody run_name ktora pozwala na wybor datasetu
+    """
+    out_dir = Paths.DATA_PROCESSED / run_name
+    out_dir.mkdir(parents=True, exist_ok=True)
+
     print("Ocena modelu na zbiorze testowym...")
 
     # Predykcja
@@ -160,21 +164,42 @@ def evaluate_model(model, x_test_tfidf, y_test):
     plt.ylabel('Rzeczywista klasa')
     plt.xlabel("Przewidziana klasa")
     plt.tight_layout()
-    plt.savefig(f"{OUTPUT_PATH}/confusion_matrix.png")
+    plt.savefig(out_dir / "confusion_matrix.png")
     print(f"Dokonano oceny modelu na zbiorze testowym. "
           f"Dokonano {accuracy*100:.2f}% prawidlowych predykcji.")
     plt.close()
 
     return accuracy, precision, recall, f1
 
-def main():
-    df = load_data(DATA_PATH)
+def train_pipeline(df: pd.DataFrame, run_name: str):
+    "Wszystkie kroki przetwarzania danych do trenowania modelu"
+    print("=" * 50)
+    print(f"Wykonywanie pipeline dla datasetu: {run_name}")
+    print("=" * 50)
+
     df = preprocessing_data(df)
     x_train, x_test, y_train, y_test = split_data(df)
     vectorizer, x_train_tfidf, x_test_tfidf = vectorize_text(x_train, x_test)
     model = train_model(x_train_tfidf, y_train)
-    save_model(model, vectorizer, MODEL_DIR)
-    accuracy, precision, recall, f1 = evaluate_model(model, x_test_tfidf, y_test)
+    save_model(model, vectorizer, Paths.MODELS / run_name)
+    evaluate_model(model, x_test_tfidf, y_test, run_name)
+
+def main():
+    # Model na poprzednim datasecie
+    df_old = load_data(Files.NEWS_ARTICLES)
+    if df_old is not None:
+        train_pipeline(df_old, run_name="old_dataset")
+
+    # Model na nowym datasecie
+
+    # Model na nowym datasecie
+    df_fake = pd.read_csv(Files.DATA_FAKE)
+    df_fake['label'] = 'Fake'
+    df_true = pd.read_csv(Files.DATA_TRUE)
+    df_true['label'] = 'Real'
+    df_new = pd.concat([df_fake, df_true])
+    train_pipeline(df_new, run_name="new_dataset")
+
 
 if __name__ == "__main__":
     main()

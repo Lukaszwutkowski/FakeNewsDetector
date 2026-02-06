@@ -23,14 +23,21 @@ Refaktoryzacja objela - Struktura OOP:
 - DataExplorer jako klasa bazowa
 - OldDatasetExplorer - analiza pliku csv z poprzedniej wersji
 - NewDatasetExplorer - analiza pliku csv z nowej wersji
+
+Dodatkowo refaktoryzacja objela uporzadkowanie sciezek plikow i katalogow
+za pomoca Path z biblioteki pathlib oraz pliku konfiguracyjnego yaml
 """
 
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
 
+from pathlib import Path
+from utils.config import Paths, Files
+
+
 # Rozwiazuje problem sciezki plikow
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# BASE_DIR = os.path.dirname(os.path.abspath(__file__)) --> POPRZEDNIE ROZWIAZANIE
 
 
 class DataExplorer:
@@ -41,12 +48,13 @@ class DataExplorer:
     def __init__(self, name: str = "Dataset"):
         self.df = None
         self.name = name
-        self.output_path = os.path.join(BASE_DIR, "..", "data", "processed")
-        os.makedirs(self.output_path, exist_ok=True)
+        self.output_path = Paths.DATA_PROCESSED / self.name # --> rozwiazanie problemu z nadpisywaniem wykresow
+        self.output_path.mkdir(parents=True, exist_ok=True)
 
     def load_data(self, filepath):
         "Wczytuje dane z pliku csv. Korzystam z pandas DataFrame dla wygodnego dostepu do danych."
-        if not os.path.isfile(filepath):
+        filepath = Path(filepath)
+        if not filepath.is_file():
             print(f"Plik {filepath} nie istnieje.")
             return None
 
@@ -155,7 +163,7 @@ class DataExplorer:
             if len(subset) > 0:
                 subset['text_length'].hist(ax=axes[0], bins=50, alpha=0.7, label=label, color=color)
         axes[0].legend()
-        axes[0].set_title('Histogram dlugosci tekstu - {self.name}')
+        axes[0].set_title(f'Histogram dlugosci tekstu - {self.name}')
         axes[0].set_xlabel('Liczba znakow')
         axes[0].set_ylabel('Liczba artykow')
         axes[0].set_xlim(0, 2000)
@@ -191,8 +199,8 @@ class OldDatasetExplorer(DataExplorer):
     Analiza pliku csv z poprzedniej wersji.
     """
     def __init__(self):
-        super().__init__("OldDataset")
-        self.filepath = os.path.join(BASE_DIR, "..", "data", "raw", "news_articles.csv")
+        super().__init__("old")
+        self.filepath = Files.NEWS_ARTICLES
 
     def load_data(self, filepath: str = None) -> pd.DataFrame:
         """
@@ -228,9 +236,9 @@ class NewDatasetExplorer(DataExplorer):
     """
 
     def __init__(self):
-        super().__init__("NewDataset")
-        self.fake_path = os.path.join(BASE_DIR, "..", "data", "raw", "newDataset", "Fake.csv")
-        self.true_path = os.path.join(BASE_DIR, "..", "data", "raw", "newDataset", "True.csv")
+        super().__init__("new")
+        self.fake_path = Files.DATA_FAKE
+        self.true_path = Files.DATA_TRUE
 
     def load_data(self, filepath: str = None) -> pd.DataFrame:
         """
@@ -239,7 +247,7 @@ class NewDatasetExplorer(DataExplorer):
         """
         print(f"Wczytywanie danych z plikow Fake oraz True z folderu newDataset")
 
-        if not os.path.exists(self.fake_path) or not os.path.exists(self.true_path):
+        if not self.fake_path.exists() or not self.true_path.exists():
             print("Nie znaleziono plikow Fake.csv lub True.csv w folderze newDataset")
             return None
 
@@ -270,7 +278,7 @@ class NewDatasetExplorer(DataExplorer):
             return
 
         print("=" * 50)
-        print("Analiza tematow: {self.name}")
+        print(f"Analiza tematow: {self.name}")
         print("=" * 50)
 
         subject_count = self.df['subject'].value_counts()
@@ -293,6 +301,10 @@ def main():
     Glowna funkcja, Zmieniona na potrzeby refaktoryzacji.
     Funkcja uruchamia analizy dla zbioru danych obu wersji.
     """
+    print("START main()")
+    print("Paths.DATA_PROCESSED =", Paths.DATA_PROCESSED)
+    print("Files.NEWS_ARTICLES =", Files.NEWS_ARTICLES)
+
     print("=" * 50)
     print("Witaj w skrypcie eksploracji danych!")
     print("=" * 50)
@@ -316,7 +328,7 @@ def main():
         new_explorer.run_all()
 
     print("=" * 50)
-    print("Analiza Zakonczona. Wykresy zapisano do folderu: ", os.path.join(BASE_DIR, "..", "data", "processed"), "\n")
+    print("Analiza Zakonczona. Wykresy zapisano do folderu: {Paths.DATA_PROCESSED}".format(Paths=Paths))
     print("=" * 50)
 
 

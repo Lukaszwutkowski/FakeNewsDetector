@@ -1,0 +1,30 @@
+#  Plik konfiguracyjny w YAML
+# Ma za zadanie utrzymanie projektu, refaktoryzacje struktury katalogow
+# Sciezki do danych wejsciowych
+# Sciezki do plikow wejsciowych
+# lokalizacje modeli ML
+
+paths:
+  # Data
+  data_raw: "data/raw"
+  data_processed: "data/processed"
+  data_newDataset: "data/raw/newDataset"
+
+  # Model
+  models: "ml"
+
+  # App
+  templates: "app/templates"
+  static: "app/static"
+
+files:
+  # Old dataSet
+  news_articles: "data/raw/news_articles.csv"
+
+  # New dataSet
+  newDataset_fake: "data/raw/newDataset/Fake.csv"
+  newDataset_true: "data/raw/newDataset/True.csv"
+
+  # Model artifacts
+  model: "ml"
+  vectorizer: "ml"
