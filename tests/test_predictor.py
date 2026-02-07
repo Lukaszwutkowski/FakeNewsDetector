@@ -231,3 +231,56 @@ class TestPredictArticleStructure:
         for key in valid_prediction_keys:
             assert key in result, f"Brak klucza {key} w wyniku"
 
+class TestSourceCleaner:
+
+
+    """
+    Testy sprawdzaja czy usuwanie meta danych zrodlowych nie powoduje blednych wynikow
+    """
+
+    @pytest.mark.parametrize("input_text, expected_output", [
+        ("WASHINGTON (Reuters) - The president announced new policy",
+         "the president announced new policy"),
+        ("New York Times (AP) - Stock markets rose today", "stock markets rose today"),
+    ])
+    def test_it_should_remove_city_and_news_agency_prefix(self, input_text, expected_output):
+        # GIVEN --> @pytest.mark
+        # WHEN
+        result = text_preprocessing(input_text)
+
+        # THEN
+        assert result == expected_output
+
+    def test_it_should_remove_news_agency_name_mention_in_text(self):
+        # GIVEN
+        text = "The president announced new policy according to CNN"
+
+        # WHEN
+        result = text_preprocessing(text)
+
+        # THEN
+        assert "CNN" not in result
+
+    def test_it_should_handle_text_without_source(self):
+        # GIVEN
+        text = "The president announced new policy"
+
+        # WHEN
+        result = text_preprocessing(text)
+
+        # THEN
+        assert result == "the president announced new policy"
+
+    def test_it_should_return_empty_for_none(self):
+        # GIVEN
+        text = None
+
+        # WHEN
+        result = text_preprocessing(text)
+
+        # THEN
+        assert result == ""
+
+
+
+
