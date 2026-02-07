@@ -34,13 +34,14 @@ def normalize_source(text):
     # Cel to usuniecie naglowkow z artykulu typu miasto-zrodlo ktore pojawiaja sie na poczatku
     # Chce zapobiec przez model kojarzenia okreslonych slow z konkretnym zrodlem
     # Liczy sie sens zdania dlatego to nalezy usunac
-    text = re.sub(r'^[A-Z]{2,}[A-Z\s,]*\([^)]+\)\s*[---]\s*',"", text)
+    text = re.sub(r'^[A-Z]{2,}[A-Z\s,]*\([^)]+\)\s*[-–—]\s*',"", text)
 
     # Usuwanie zrodla ktore pojawia sie w nawiasie na poczatku
-    text = re.sub(r'^\([^)]+\)\s*[---]?\s*',"", text)
+    text = re.sub(r'^\([^)]+\)\s*[-–—]?\s*',"", text)
 
     # Usuwanie nazw agencji w calym tekscie
-    agencies = ['CNN', 'BBC', 'Fox News', 'Reuters', 'The Guardian', 'The Washington Post', 'Bloomberg']
+    agencies = ['AP','CNN', 'BBC', 'Fox News', 'Reuters', 'The Guardian', 'The Washington Post', 'Bloomberg',
+                'New York Times', 'The New York Times', 'The Wall Street Journal', 'The Atlantic']
     for agency in agencies:
         text = re.sub(rf'\b{agency}\b', "", text, flags=re.IGNORECASE)
 
