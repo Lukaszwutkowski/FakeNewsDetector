@@ -1,7 +1,7 @@
 """
 Plik konfiguracyjny:
 - wczytanie conf z pliku config.yaml
-- ustalenie lkatalogu glownego
+- ustalenie katalogu glownego
 - sciezki absolutne do katalogow i plikow
 
 Pozwoli to na zmiany konfiguracji bez koniecznosci zmiany kodu,
@@ -75,4 +75,4 @@ class ModelConfig:
     """
     Konfiguracja modelu. Wybor aktualnego datasetu
     """
-    ACTIVE_RUN = _config.get('model', {}).get('active_run', 'new_dataset')
+    ACTIVE_MODEL = _config.get('model', {}).get('active_model', 'best_model')

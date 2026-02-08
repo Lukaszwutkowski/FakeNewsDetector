@@ -6,9 +6,9 @@ from src.models_training import load_trained_model
 from utils.text_processing import text_preprocessing
 from utils.config import Paths, ModelConfig
 
-RUN_NAME = ModelConfig.ACTIVE_RUN
-MODEL_PATH = Paths.MODELS / RUN_NAME / "model.joblib"
-VECTORIZER_PATH = Paths.MODELS / RUN_NAME / "vectorizer.joblib"
+RUN_NAME = ModelConfig.ACTIVE_MODEL
+MODEL_PATH = Paths.MODELS / RUN_NAME / "best_model.joblib"
+VECTORIZER_PATH = Paths.MODELS / RUN_NAME / "best_vectorizer.joblib"
 
 model = None
 vectorizer = None

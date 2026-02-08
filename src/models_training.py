@@ -206,10 +206,18 @@ def evaluate_model(model, x_test, y_test, model_name="Model", out_dir=None):
 
 def load_trained_model(model_dir=None):
     """
-    Odpowiada za ladowanie modelu z pliku
+    Odpowiada za ladowanie modelu z pliku. Wybiera najlepszy model z katalogu best_model.
     """
     if model_dir is None:
-        model_dir = Paths.MODELS / ModelConfig.ACTIVE_RUN
+        model_dir = Paths.MODELS / ModelConfig.ACTIVE_MODEL
+
+    """
+    DEBUGOWANIE SCIEZKI DO KATALOGU MODELU
+    print(f"\n{'=' * 60}")
+    print(f"DEBUG - Sciezka do katalogu modelu:")
+    print(f"  model_dir: {model_dir}")
+    print(f"  model_dir (absolute): {model_dir.resolve()}")
+    print(f"{'=' * 60}\n")"""
 
     model_dir = Path(model_dir)
     model_path = model_dir / "model.joblib"
@@ -352,6 +360,15 @@ def compare_models_and_choose_best():
     best_model = results_df.loc[best_idx]
     best_model_name = best_model['model']
     print(f"\nNajlepszy model: {best_model_name}")
+
+    # Ponowne trnowanie najlepszego modelu na pelnych danych
+    best_model = get_model(best_model_name)
+    best_model, final_train_time = train_model(best_model, x_train_tfidf, y_train, best_model_name)
+
+    # Zapisanie modelu w katalogu best_model
+    best_model_dir = Paths.MODELS / "best_model"
+    save_model(best_model, vectorizer, best_model_dir, best_model_name)
+    print(f"Najlepszy model zapisany w katalogu: {best_model_dir}")
 
     return results_df, best_model_name
 
