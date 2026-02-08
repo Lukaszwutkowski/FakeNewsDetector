@@ -27,5 +27,5 @@ files:
 
 # Konfiguracja modelu, zmiana datasetu
 model:
-  # Aktywny model do trenowania
+  # Aktywny dataset do trenowania
   active_run: "new_dataset"

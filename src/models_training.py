@@ -1,3 +1,19 @@
+"""
+Wersja 1.0 - model na poprzednim datasecie.
+Skrypt odpowiedzialny za trenowanie modelu
+
+Wersja 1.1 - model na nowym i starym datasecie
+
+Wersja 1.2 - refaktoryzacja skryptu. Modul zawiera teraz wspolne funkcje
+i klasy do przetwarzania danych i trenowania modeli.
+- Ladowanie danych z pliku csv
+- Przygotowanie danych do trenowania
+- Dzielenie danych na zbiory treningowe i testowe
+- Wektoryzacja tekstu
+- Trenowanie modeli
+- Zapis modeli w pliku
+- Ocena modeli na zbiorze testowym
+"""
 
 
 import joblib
@@ -5,27 +21,19 @@ import joblib
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import time
 
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from sklearn.model_selection import train_test_split
 from pathlib import Path
 
+from src.data_explorer import NewDatasetExplorer
 from utils.text_processing import text_preprocessing
-from utils.config import Files, Paths
+from utils.data_loader import load_data_from_csv
+from utils.config import Paths, Files, ModelConfig, dir_exists
+from src.models import get_model, all_models, get_available_models
 
-def load_data(filepath):
-    "Wczytuje dane z pliku csv"
-    filepath = Path(filepath)
-    if not filepath.is_file():
-        print(f"Plik {filepath} nie istnieje.")
-        return None
-
-    print(f"Wczytywanie danych z pliku {filepath}")
-    df = pd.read_csv(filepath)
-    print(f"Dane wczytane: W pliku znaleziono {len(df)} rekordow.")
-    return df
 
 def preprocessing_data(df):
     "Przygotowanie danych do trenowania"
@@ -41,12 +49,17 @@ def preprocessing_data(df):
     df['label_numeric'] = df['label'].map({'Real': 0, 'Fake': 1})
 
     # Wyszukanie rekordow z brakujacymi etykietami i  usuniecie ich
+    before = len(df)
     df = df.dropna(subset=['label_numeric'])
+    after = len(df)
+
+    if before != after:
+        print(f"Usunieto {before - after} rekordow z brakujacymi etykietami.")
 
     print(f"Dane po przetworzeniu: W pliku znaleziono {len(df)} rekordow.")
     return df
 
-def split_data(df, test_size=0.2):
+def split_data(df, test_size=0.2, random_state=42):
     """Dzielenie danych na zbiory treningowe i testowe:"""
     print("Dzielenie danych na zbiory treningowe i testowe...")
 
@@ -54,7 +67,7 @@ def split_data(df, test_size=0.2):
     y = df['label_numeric']
 
     x_train, x_test, y_train, y_test = train_test_split(
-        x, y, test_size=test_size, random_state=42, stratify=y)
+        x, y, test_size=test_size, random_state=random_state, stratify=y)
 
     print(f"Rozmiar zbioru treningowego: {len(x_train)} rekordow.")
     print(f"Rozmiar zbioru testowego: {len(x_test)} rekordow.")
@@ -82,21 +95,21 @@ def vectorize_text(x_train, x_test, max_features=5000):
 
     return vectorizer, x_train_tfidf, x_test_tfidf
 
-def train_model(x_train_tfidf, y_train):
-    """Trenowanie modelu. Logistyczna regresja."""
-    print("Trenowanie modelu...")
+def train_model(model, x_train, y_train, model_name="Model"):
+    """
+    Trenowanie pojedynczego modelu. Dodanie metody model_name, aby zmienic nazwe modelu.
+    Dodanie metody start_time, aby zobaczyc czas trwania trenowania modelu.
+    """
+    print(f"Trenowanie modelu: {model_name}")
 
-    model = LogisticRegression(
-        max_iter=1000,
-        random_state=42,
-        C=1.0,
-        class_weight='balanced'
-    )
+    start_time = time.time()
+    model.fit(x_train, y_train)
+    train_time = time.time() - start_time
+    print(f"Czas trenowania modelu: {train_time}")
 
-    model.fit(x_train_tfidf, y_train)
-    return model
+    return model, train_time
 
-def save_model(model, vectorizer, model_dir: Path):
+def save_model(model, vectorizer, model_dir, model_name="model"):
     """Zapis modelu w pliku."""
     model_dir = Path(model_dir)
     model_dir.mkdir(parents=True, exist_ok=True)
@@ -112,44 +125,21 @@ def save_model(model, vectorizer, model_dir: Path):
     print(f"Model zapisany w pliku: {model_path}")
     print(f"Vectorizer zapisany w pliku: {vectorizer_path}")
 
-def evaluate_model(model, x_test_tfidf, y_test, run_name: str):
+    # Dodatkowe informacje o modelu zapisane do pliku txt dla oceny
+    info_path = model_dir / "model_info.txt"
+    with open(info_path, "w") as f:
+        f.write(f"Model: {model_name}\n")
+        f.write(f"Typ: {type(model).__name__}\n")
+
+def save_confusion_metric(cm, model_name, out_dir):
     """
-    Ocena modelu na zbiorze testowym.
-    - Dodanie metody run_name ktora pozwala na wybor datasetu
+    Funkcja zapisuje macierze pomylek. Wyodrebniona jako osobna funkcja z
+    funkcji evaluate_model.
     """
-    out_dir = Paths.DATA_PROCESSED / run_name
-    out_dir.mkdir(parents=True, exist_ok=True)
-
-    print("Ocena modelu na zbiorze testowym...")
-
-    # Predykcja
-    y_pred = model.predict(x_test_tfidf)
-
-    # Metryki
-    accuracy = accuracy_score(y_test, y_pred)
-    precision = precision_score(y_test, y_pred)
-    recall = recall_score(y_test, y_pred)
-    f1 = f1_score(y_test, y_pred)
-
-    print(
-        f"Metryki oceny modelu na zbiorze testowym:\n"
-        f"Accuracy: {accuracy:.4f}\n"
-        f"Precision: {precision:.4f}\n"
-        f"Recall: {recall:.4f}\n"
-        f"F1: {f1:.4f}"
-    )
-
-    # Macierz pomylek
-    cm = confusion_matrix(y_test, y_pred)
-    print(
-        "Macierz pomylek:\n",
-        pd.DataFrame(cm, index=["Real", "Fake"], columns=["Real", "Fake"])
-    )
-
     # Wykres macierzy pomylek
     plt.figure(figsize=(8, 6))
     plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
-    plt.title('Macierz pomylek')
+    plt.title(f'Macierz pomylek modelu {model_name}', fontsize=14, pad=20)
     plt.colorbar()
     classes = ['Real', 'Fake']
     tick_marks = np.arange(len(classes))
@@ -164,42 +154,216 @@ def evaluate_model(model, x_test_tfidf, y_test, run_name: str):
     plt.ylabel('Rzeczywista klasa')
     plt.xlabel("Przewidziana klasa")
     plt.tight_layout()
-    plt.savefig(out_dir / "confusion_matrix.png")
-    print(f"Dokonano oceny modelu na zbiorze testowym. "
-          f"Dokonano {accuracy*100:.2f}% prawidlowych predykcji.")
+
+    filepath = out_dir / f"confusion_matrix_{model_name}.png"
+    plt.savefig(filepath)
     plt.close()
 
-    return accuracy, precision, recall, f1
+def evaluate_model(model, x_test, y_test, model_name="Model", out_dir=None):
+    """
+    Ocena modelu na zbiorze testowym.
+    - Restrukturyzacja objela - dodanie parametru out_dir na None,
+    aby funkcja mogla dzialac bez koniecznosci podawania parametru out_dir.
+    - Dodanie model_name, aby wybrac model.
+    """
+    print(f"Ocena modelu na zbiorze testowym: {model_name}")
 
-def train_pipeline(df: pd.DataFrame, run_name: str):
-    "Wszystkie kroki przetwarzania danych do trenowania modelu"
+    # Predykcja
+    y_pred = model.predict(x_test)
+
+    # Metryki
+    metrics = {
+       'model': model_name,
+       'accuracy': accuracy_score(y_test, y_pred),
+       'precision': precision_score(y_test, y_pred),
+       'recall': recall_score(y_test, y_pred),
+       'f1': f1_score(y_test, y_pred)
+    }
+
+    print(
+        f"\n\n======================\n"
+        f"Metryki oceny modelu {model_name}:\n"
+        f"Accuracy: {metrics['accuracy']:.4f}({metrics['accuracy']*100:.2f}%)\n"
+        f"Precision: {metrics['precision']:.4f}\n"
+        f"Recall: {metrics['recall']:.4f}\n"
+        f"F1: {metrics['f1']:.4f}\n"
+        f"======================\n"
+    )
+
+    # Macierz pomylek
+    cm = confusion_matrix(y_test, y_pred)
+    print(
+        "Macierz pomylek:\n",
+        pd.DataFrame(pd.DataFrame(cm, index=["Real", "Fake"], columns=["Real", "Fake"]))
+    )
+
+    if out_dir:
+        out_dir = Path(out_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        save_confusion_metric(cm, model_name, out_dir)
+
+    return metrics
+
+def load_trained_model(model_dir=None):
+    """
+    Odpowiada za ladowanie modelu z pliku
+    """
+    if model_dir is None:
+        model_dir = Paths.MODELS / ModelConfig.ACTIVE_RUN
+
+    model_dir = Path(model_dir)
+    model_path = model_dir / "model.joblib"
+    vectorizer_path = model_dir / "vectorizer.joblib"
+
+    if not model_path.exists() or not vectorizer_path.exists():
+        print(f"Model {model_dir} nie zostal znaleziony.")
+        return None
+
+    model = joblib.load(model_path)
+    vectorizer = joblib.load(vectorizer_path)
+
+    return model, vectorizer
+
+
+def _plot_metrics(results_df, out_dir, save=True):
+    """
+    Wykres slupkowy porownujacy metryki accuracy, precision, recall i f1.
+    """
+    metrics = [m for m in ['accuracy', 'precision', 'recall', 'f1'] if m in results_df.columns]
+    if not metrics:
+        print("Brak danych do wykresu.")
+        return
+
+    model_names = results_df['model'].tolist()
+    plot_df = results_df.set_index('model')[metrics]
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    plot_df.plot.bar(ax=ax, rot=0, width=0.8)
+    ax.set_title("Porownanie metryk accuracy, precision, recall i f1")
+    ax.set_xlabel("Model")
+    ax.set_ylabel("Wartosc")
+    ax.set_ylim(0, 1)
+    ax.grid(axis='y')
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+
+    if save:
+        filepath = out_dir / "metrics_comparison.png"
+        plt.savefig(filepath)
+        plt.close()
+    else:
+        plt.show()
+
+
+def _plot_f1(results_df, out_dir, save=True):
+    """
+    Ranking F1 dla modeli.
+    """
+    if 'f1' not in results_df.columns:
+        print("Brak danych do wykresu.")
+        return
+
+    sorted_df = results_df.sort_values(by='f1', ascending=False)
+
+    plt.figure(figsize=(10, 6))
+    plt.barh(sorted_df['model'], sorted_df['f1'])
+    plt.title("Ranking F1 dla modeli")
+    plt.xlabel("F1")
+    plt.ylabel("Model")
+    plt.xlim(0, 1)
+
+    for i, v in enumerate(sorted_df['f1']):
+        plt.text(v + 0.02, i, f'{v:.4f}', ha='left', va='center')
+
+    plt.tight_layout()
+
+    if save:
+        filepath = out_dir / "f1_ranking.png"
+        plt.savefig(filepath)
+        plt.close()
+    else:
+        plt.show()
+
+def create_comparision_plots_for_models(results_df, out_dir, save=True):
+    """
+    Tworzenie wykresow porownawczych dla modeli. Ma to na celu ewaluacje modeli.
+    Wyniki do przedstawienia na obronie!!
+    """
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    # Metryki
+    _plot_metrics(results_df, out_dir, save=save)
+
+    # Ranking F1
+    _plot_f1(results_df, out_dir, save=save)
+
+def compare_models_and_choose_best():
+    """
+    Funkcja uruchamia, trenuje oraz porownuje dostepne modele.
+    Na podstawie metryk wybiera najlepszy model.
+    """
+    dir_exists() # --> upewnienie sie ze sa katalogi
+
     print("=" * 50)
-    print(f"Wykonywanie pipeline dla datasetu: {run_name}")
+    print("Porownanie modeli")
     print("=" * 50)
+
+    # Ladowanie danych - korzystam z nowego Datasetu (NewDataSetExplorer)
+    # wybor po analizie danych, wiecej rekordow.
+    explorer = NewDatasetExplorer()
+    df = explorer.load_data()
+    if df is None:
+        print("Nie udalo sie wczytac danych.")
+        return
 
     df = preprocessing_data(df)
     x_train, x_test, y_train, y_test = split_data(df)
     vectorizer, x_train_tfidf, x_test_tfidf = vectorize_text(x_train, x_test)
-    model = train_model(x_train_tfidf, y_train)
-    save_model(model, vectorizer, Paths.MODELS / run_name)
-    evaluate_model(model, x_test_tfidf, y_test, run_name)
+
+    results = []
+
+    # Katalog wymagany do zapisania wynikow, potrzebny do metody tworzenia wykresu
+    comparison_dir = Paths.MODELS / "comparison"
+    comparison_dir.mkdir(parents=True, exist_ok=True)
+
+    # Trenowanie wszystkich modeli
+    for model_name in get_available_models():
+        print(f"\nTrenowanie modelu: {model_name}")
+        model = get_model(model_name)
+        model, train_time = train_model(model, x_train_tfidf, y_train, model_name)
+        metrics = evaluate_model(model, x_test_tfidf, y_test, model_name)
+        metrics['czas_trenowania'] = f"{train_time:.2f}s"
+        results.append(metrics)
+
+    results_df = pd.DataFrame(results)
+
+    # zapis wynikow do pliku csv
+    results_csv_path = comparison_dir / "model_comparison_results.csv"
+    results_df.to_csv(results_csv_path, index=False)
+    print(f"Wyniki porownawcze zapisane do pliku: {results_csv_path}")
+
+    # Tworzenie wykresow poeownawczych
+    create_comparision_plots_for_models(results_df, comparison_dir, save=True)
+    print("Wszystkie modele porownane i wyniki zapisane w plikach.")
+
+    # Wybor najlepszego modelu na podstawie porownania
+    best_idx = results_df['f1'].idxmax()
+    best_model = results_df.loc[best_idx]
+    best_model_name = best_model['model']
+    print(f"\nNajlepszy model: {best_model_name}")
+
+    return results_df, best_model_name
 
 def main():
-    # Model na poprzednim datasecie
-    df_old = load_data(Files.NEWS_ARTICLES)
-    if df_old is not None:
-        train_pipeline(df_old, run_name="old_dataset")
+    print("Wersja 1.2 - refaktoryzacja skryptu.")
+    print("Trenowanie modeli")
+    print("=" * 50)
 
-    # Model na nowym datasecie
-
-    # Model na nowym datasecie
-    df_fake = pd.read_csv(Files.DATA_FAKE)
-    df_fake['label'] = 'Fake'
-    df_true = pd.read_csv(Files.DATA_TRUE)
-    df_true['label'] = 'Real'
-    df_new = pd.concat([df_fake, df_true])
-    train_pipeline(df_new, run_name="new_dataset")
-
+    compare_models_and_choose_best()
 
 if __name__ == "__main__":
     main()
+
+
+

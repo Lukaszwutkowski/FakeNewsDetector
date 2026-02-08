@@ -32,8 +32,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 
-from pathlib import Path
 from utils.config import Paths, Files
+from utils.data_loader import load_data_from_csv
 
 
 # Rozwiazuje problem sciezki plikow
@@ -52,15 +52,11 @@ class DataExplorer:
         self.output_path.mkdir(parents=True, exist_ok=True)
 
     def load_data(self, filepath):
-        "Wczytuje dane z pliku csv. Korzystam z pandas DataFrame dla wygodnego dostepu do danych."
-        filepath = Path(filepath)
-        if not filepath.is_file():
-            print(f"Plik {filepath} nie istnieje.")
-            return None
-
-        print(f"Wczytywanie danych z pliku {filepath}")
-        self.df = pd.read_csv(filepath)
-        print(f"Dane wczytane: W pliku znaleziono {len(self.df)} rekordow.")
+        """
+        Wczytuje dane z pliku csv. Korzystam z pandas DataFrame dla wygodnego dostepu do danych.
+        Wykorzystuje funkcje load_data z data_loader.
+        """
+        self.df = load_data_from_csv(filepath)
         return self.df
 
     def basic_info(self):
@@ -183,10 +179,6 @@ class DataExplorer:
         print("Zapisano wykres do pliku text_length_distribution.png")
         plt.close()
 
-    def _safe_name(self):
-        """Zwraca bezpieczny string dla nazwy pliku."""
-        return "".join(c if c.isalnum() else "_" for c in self.name).lower()
-
     def run_all(self):
         """Uruchamia wszystkie funkcje analizy danych."""
         self.basic_info()
@@ -202,11 +194,12 @@ class OldDatasetExplorer(DataExplorer):
         super().__init__("old")
         self.filepath = Files.NEWS_ARTICLES
 
-    def load_data(self, filepath: str = None) -> pd.DataFrame:
+    def load_data(self):
         """
         Wczytuje dane z pliku csv. Korzystam z pandas DataFrame dla wygodnego dostepu do danych.
         """
-        return super().load_data(filepath or self.filepath)
+        self.df = load_data_from_csv(self.filepath)
+        return self.df
 
     def languages_analysis(self):
         """
@@ -240,7 +233,7 @@ class NewDatasetExplorer(DataExplorer):
         self.fake_path = Files.DATA_FAKE
         self.true_path = Files.DATA_TRUE
 
-    def load_data(self, filepath: str = None) -> pd.DataFrame:
+    def load_data(self):
         """
         Celem jest wczytanie plikow z danymi Fake oraz True.
         Pliki zostana polaczone
