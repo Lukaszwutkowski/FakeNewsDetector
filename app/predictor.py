@@ -2,14 +2,13 @@
 Modul odpowiedzialny za predykcje. Laduje wytrenowany model i klasyfikuje tekst
 """
 
-import joblib
-
+from src.models_training import load_trained_model
 from utils.text_processing import text_preprocessing
 from utils.config import Paths, ModelConfig
 
-RUN_NAME = ModelConfig.ACTIVE_RUN
-MODEL_PATH = Paths.MODELS / RUN_NAME / "model.joblib"
-VECTORIZER_PATH = Paths.MODELS / RUN_NAME / "vectorizer.joblib"
+RUN_NAME = ModelConfig.ACTIVE_MODEL
+MODEL_PATH = Paths.MODELS / RUN_NAME / "best_model.joblib"
+VECTORIZER_PATH = Paths.MODELS / RUN_NAME / "best_vectorizer.joblib"
 
 model = None
 vectorizer = None
@@ -19,15 +18,7 @@ def load_model():
     Ladowanie modelu oraz wektoryzatora z plikow
     """
     global model, vectorizer
-
-    if MODEL_PATH.exists() and VECTORIZER_PATH.exists():
-        model = joblib.load(MODEL_PATH)
-        vectorizer = joblib.load(VECTORIZER_PATH)
-        print("Model zaladowany pomyslnie")
-    else:
-        print("Nie znaleziono modelu")
-        model = None
-        vectorizer = None
+    model, vectorizer = load_trained_model()
 
 def predict(text):
     """
