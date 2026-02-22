@@ -3,26 +3,61 @@
 
 {% block content %}
 <div class="row justify-content-center">
-  <div class="col-lg-8">
+  <div class="col-lg-9">
     <div class="card shadow">
       <div class="card-header">
         <h4 class="mb-0">O projekcie</h4>
       </div>
       <div class="card-body">
-        <h5>Opis dzialania projektu</h5>
+        <h5>Cel projektu</h5>
+        <p>
+          Celem projektu bylo stworzenie systemu klasyfikacji artykulow prasowych w kontekscie
+          wykrywania <strong>Fake News</strong>. Aplikacja wykorzystuje techniki
+          przetwarzania jezyka naturalnego (NLP) oraz uczenia maszynowego (ML)
+          do automatycznej analizy tresci
+        </p>
+
+        <h5>Pipeline przetwarzania danych</h5>
         <ol>
-          <li>Uzytkownik wprowadza tekst i tytul artykulu</li>
-          <li>Model przetwarza tekst i tytul (normalizacja, czyszczenie)</li>
-          <li>Model przeksztalca tekst na wektor cech (TF-IDF)</li>
-          <li>Model wykonuje predykcje na podstawie wektora cech</li>
-          <li>Prezentacja wyniku wraz z poziomem pewnosci</li>
+          <li><strong>Wprowadzenie danych:</strong>
+            Uzytkownik wprowadza tytul oraz tresc artykulu</li>
+          <li><strong>Preprocessing:</strong>
+            Tekst poddawany jest czyszczeniu oraz normalizacji
+          == usuwanie znakow specjalnych
+          == przeksztalcenie na male litery
+          == tokenizacja</li>
+          <li><strong>Ekstrakcja cech - TF-IDF:</strong>
+            Teskt zostaje zamieniony na wektor numeryczny z wykorzystaniem
+          modelu TF-IDF</li>
+          <li><strong>Analiza sentymentu (VADER):</strong>
+            W celu glebszej analizy wyznaczane sa cechy emocjonalne tresci:
+          compound, positive, negative, neutral</li>
+          <li><strong>Klasyfikacja:</strong>
+            Wytrenowany model ML przewiduje czy artykul jest <strong>Prawdziwy</strong>
+          czy <strong>Falszywy</strong></li>
+          <li><strong>Prezentacja wyniku:</strong>
+          Uzytkownik otrzymuje etykiete oraz poziom pewnosci predykcji</li>
         </ol>
+
+        <h5>Zastosowane modele</h5>
+        <ul>
+          <li>Logistic Regression</li>
+          <li>Random Forest</li>
+          <li>LightGBM</li>
+        </ul>
+        <p>Modele zostaly porownane na podstawie metryk: Accuracy, Precision,
+        Recall oraz F1-score. Najlepszy model jest wybierany automatycznie
+        na podstawie najwyzszej wartosci F1-score</p>
+
         <h5>Technologia</h5>
         <ul>
           <li><strong>Python 3.10</strong></li>
-          <li><strong>Flask 2.2.2</strong></li>
-          <li><strong>scikit-learn</strong></li>
-          <li><strong>Bootstrap</strong></li>
+          <li><strong>Flask 2.x</strong> - warstwa aplikacji webowej</li>
+          <li><strong>scikit-learn</strong> - trenowanie oraz ewaluacja modeli ML</li>
+          <li><strong>NLTK (VADER)</strong> - analiza sentymentu</li>
+          <li><strong>LightGBM</strong> - model gradient boosting</li>
+          <li><strong>Matplotlib</strong> - wizualizacja metryk i macierzy pomylek</li>
+          <li><strong>Bootstrap 5</strong> - interfejs uzytkownika (style)</li>
         </ul>
         <p class="text-muted">Projekt inzynierski @Author - Lukasz Wutkowski.</p>
       </div>

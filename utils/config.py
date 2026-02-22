@@ -33,9 +33,7 @@ PROJECT_ROOT = _find_root()
 def load_config() -> dict[str, Any]:
     """Wczytanie konfiguracji z pliku config.yaml"""
     config_path = PROJECT_ROOT / 'config.yaml'
-
-    with open(config_path, 'r') as f:
-        return yaml.safe_load((_find_root() / 'config.yaml').read_text())
+    return yaml.safe_load(config_path.read_text())
 
 # Wczytanie konfiguracji przy starcie
 _config = load_config()

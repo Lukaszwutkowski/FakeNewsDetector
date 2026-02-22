@@ -56,4 +56,4 @@ def about():
     """
     return render_template('about.html')
 
-# print(app.template_folder) -> test sciezki do templates
+# print(app.template_folder)  # -> test sciezki do templates

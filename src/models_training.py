@@ -16,23 +16,22 @@ i klasy do przetwarzania danych i trenowania modeli.
 """
 
 
-import joblib
+import time
+from pathlib import Path
 
+import joblib
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import time
-
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from sklearn.model_selection import train_test_split
-from pathlib import Path
 
 from src.data_explorer import NewDatasetExplorer
+from src.models import get_model, get_available_models
+from utils.config import Paths, ModelConfig, dir_exists
+from utils.feature_engineering import FeatureExtractor, combine_features
 from utils.text_processing import text_preprocessing
-from utils.data_loader import load_data_from_csv
-from utils.config import Paths, Files, ModelConfig, dir_exists
-from src.models import get_model, all_models, get_available_models
 
 
 def preprocessing_data(df):
@@ -109,7 +108,7 @@ def train_model(model, x_train, y_train, model_name="Model"):
 
     return model, train_time
 
-def save_model(model, vectorizer, model_dir, model_name="model"):
+def save_model(model, vectorizer, feature_extractor, model_dir, model_name="model"):
     """Zapis modelu w pliku."""
     model_dir = Path(model_dir)
     model_dir.mkdir(parents=True, exist_ok=True)
@@ -118,9 +117,11 @@ def save_model(model, vectorizer, model_dir, model_name="model"):
 
     model_path = model_dir / "model.joblib"
     vectorizer_path = model_dir / "vectorizer.joblib"
+    feature_extractor_path = model_dir / "feature_extractor.joblib"
 
     joblib.dump(model, model_path)
     joblib.dump(vectorizer, vectorizer_path)
+    joblib.dump(feature_extractor, feature_extractor_path)
 
     print(f"Model zapisany w pliku: {model_path}")
     print(f"Vectorizer zapisany w pliku: {vectorizer_path}")
@@ -222,6 +223,7 @@ def load_trained_model(model_dir=None):
     model_dir = Path(model_dir)
     model_path = model_dir / "model.joblib"
     vectorizer_path = model_dir / "vectorizer.joblib"
+    feature_extractor_path = model_dir / "feature_extractor.joblib"
 
     if not model_path.exists() or not vectorizer_path.exists():
         print(f"Model {model_dir} nie zostal znaleziony.")
@@ -229,8 +231,9 @@ def load_trained_model(model_dir=None):
 
     model = joblib.load(model_path)
     vectorizer = joblib.load(vectorizer_path)
+    feature_extractor = joblib.load(feature_extractor_path)
 
-    return model, vectorizer
+    return model, vectorizer, feature_extractor
 
 
 def _plot_metrics(results_df, out_dir, save=True):
@@ -327,7 +330,23 @@ def compare_models_and_choose_best():
 
     df = preprocessing_data(df)
     x_train, x_test, y_train, y_test = split_data(df)
+
+    """ =========== TF-IDF ========="""
     vectorizer, x_train_tfidf, x_test_tfidf = vectorize_text(x_train, x_test)
+
+    """ ======= VADER ========"""
+    # Analiza sentymentu
+    feature_extractor = FeatureExtractor()
+    train_sentiment = feature_extractor.fit_transform(x_train)
+    test_sentiment = feature_extractor.transform(x_test)
+
+    """ ======= TF-IDF + VADER ======="""
+    x_train_final = combine_features(x_train_tfidf, train_sentiment)
+    x_test_final = combine_features(x_test_tfidf, test_sentiment)
+
+    """ ====== Debug dla upewnienia sie ze +4 cechy w final ===== """
+    print("Shape train TF-IDF", x_train_tfidf.shape)
+    print("Shape train FINAL", x_train.final.shape)
 
     results = []
 
@@ -335,12 +354,12 @@ def compare_models_and_choose_best():
     comparison_dir = Paths.MODELS / "comparison"
     comparison_dir.mkdir(parents=True, exist_ok=True)
 
-    # Trenowanie wszystkich modeli
+    """ ========= Trenowanie wszystkich modeli ========="""
     for model_name in get_available_models():
         print(f"\nTrenowanie modelu: {model_name}")
         model = get_model(model_name)
-        model, train_time = train_model(model, x_train_tfidf, y_train, model_name)
-        metrics = evaluate_model(model, x_test_tfidf, y_test, model_name)
+        model, train_time = train_model(model, x_train_final, y_train, model_name)
+        metrics = evaluate_model(model, x_test_final, y_test, model_name)
         metrics['czas_trenowania'] = f"{train_time:.2f}s"
         results.append(metrics)
 
@@ -351,23 +370,23 @@ def compare_models_and_choose_best():
     results_df.to_csv(results_csv_path, index=False)
     print(f"Wyniki porownawcze zapisane do pliku: {results_csv_path}")
 
-    # Tworzenie wykresow poeownawczych
+    # Tworzenie wykresow porownawczych
     create_comparision_plots_for_models(results_df, comparison_dir, save=True)
     print("Wszystkie modele porownane i wyniki zapisane w plikach.")
 
-    # Wybor najlepszego modelu na podstawie porownania
+    """ ======== Wybor najlepszego modelu na podstawie porownania ===== """
     best_idx = results_df['f1'].idxmax()
     best_model = results_df.loc[best_idx]
     best_model_name = best_model['model']
     print(f"\nNajlepszy model: {best_model_name}")
 
-    # Ponowne trnowanie najlepszego modelu na pelnych danych
+    """ ==== Ponowne trenowanie najlepszego modelu na pelnych danych ==== """
     best_model = get_model(best_model_name)
-    best_model, final_train_time = train_model(best_model, x_train_tfidf, y_train, best_model_name)
+    best_model, final_train_time = train_model(best_model, x_train_final, y_train, best_model_name)
 
     # Zapisanie modelu w katalogu best_model
     best_model_dir = Paths.MODELS / "best_model"
-    save_model(best_model, vectorizer, best_model_dir, best_model_name)
+    save_model(best_model, vectorizer, feature_extractor, best_model_dir, best_model_name)
     print(f"Najlepszy model zapisany w katalogu: {best_model_dir}")
 
     return results_df, best_model_name
