@@ -3,7 +3,7 @@ import re
 import pandas as pd
 
 
-def text_preprocessing(text):
+def text_preprocessing(text, use_normalization=True):
     """
     Przygotowanie tekstu do modelowania:
     W celu uzyskania najlepszych wynikow przygotuje tekst do modelowania.
@@ -15,7 +15,8 @@ def text_preprocessing(text):
         return ""
 
     # Wykorzystanie nowej funkcji usuwania metadanych zrodlowych
-    text = normalize_source(text)
+    if use_normalization:
+        text = normalize_source(text)
 
     text = re.sub(r'[^a-zA-Z0-9\s]', "", text)
     text = text.lower()
